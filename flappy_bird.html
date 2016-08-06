@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>MY</title>
+</head>
+<body>
+<canvas id="canvas" width="800" height="600" style="border: 1px solid blue"></canvas>
+<script src="js/util.js"></script>
+<script src="js/getImgObj.js"></script>
+<script src="js/birds.js"></script>
+<script src="js/sky.js"></script>
+<script src="js/land.js"></script>
+<script src="js/pipe.js"></script>
+<script>
+
+    //游戏主模块
+    var cvs = document.getElementById("canvas");
+    var ctx = cvs.getContext("2d");
+
+    getImgObj(function (imgObj) {
+        //  console.log(imgObj);
+        //鸟类
+        //1、初始化鸟类，并传入一个对象；那么就认为初始化完成了，可以创建实例啦
+        Birds.init(ctx, imgObj.birds);
+        var birds = new Birds(20, 20, 52, 45);
+        //2、点击鼠标，让小鸟向上移动
+        cvs.addEventListener("click", function () {
+            birds.speed = -2;
+        })
+
+
+        //创建sky类
+        Sky.init(ctx, imgObj.sky);
+        var sky = new Sky();
+        var sky2 = new Sky(800);
+        //创建大地类
+        Land.init(ctx, imgObj.land);
+//
+        var lands=[];
+        for(var i= 0;i<4;i++){
+            lands.push(new Land(imgObj.land.width * i)) ;
+        }
+
+        //创建Down钢管
+        Pipe.init(ctx, imgObj.pipedown, imgObj.pipeup);
+//
+        var pipes=[];
+        for(var i=0;i<6;i++){
+            pipes.push(new Pipe(300 + imgObj.pipedown.width * 3 *i));
+
+        }
+
+        //获取开始时间
+        var startTimer=+new Date();
+//开启计时器，让资源动起来
+        var timer = setInterval(function () {
+            //当小鸟碰到上边框和大地时，清除定时器
+            var birdsX = birds.x + imgObj.birds.width / 6;
+            var birdsY = birds.y + imgObj.birds.height / 2;
+            if (birdsY <= 0 || birdsY >= cvs.width - imgObj.land.width
+                    || Pipe.ctx.isPointInPath(birdsX, birdsY)
+            ) {
+                clearInterval(timer);
+                return;
+            }
+
+            //设置计时器：1）获取开始时间2）获取当前时间3）得到差值
+            var currentTimer=+new Date();
+            var CombatTimer=(currentTimer-startTimer)/1000;
+            var hours=Math.floor(CombatTimer/3600);
+            var minutes=Math.floor(CombatTimer%3600/60);
+            var seconds=Math.floor(CombatTimer%3600%60);
+
+            //每次清除画布
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+            //绘制天空类
+            sky.draw();
+            sky.update();
+            sky2.draw();
+            sky2.update();
+
+
+            //绘制钢管类
+            ctx.beginPath();
+           pipes.forEach(function(val){
+               val.draw();
+               val.update();
+           })
+
+            //2、调用绘制鸟类方法
+            birds.draw();
+            birds.update();
+
+            //绘制大地类:优化代码
+//
+            lands.forEach(function(val,index){
+//               val.draw();
+//               val.update();
+                lands[index].draw();
+                lands[index].update();
+            })
+
+            ctx.textAlign="right";
+            ctx.textBaseline="top";
+            ctx.fillStyle="red";
+            ctx.font="18px 微软雅黑";
+            ctx.fillText("坚持时间："+hours+":"+minutes+":"+seconds+"",800,0);
+        }, 1000 / 60);
+
+    });
+
+
+</script>
+
+</body>
+</html>
